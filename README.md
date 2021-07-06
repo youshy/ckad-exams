@@ -107,41 +107,45 @@ kubectl run counter --image=busybox --restart=Never --dry-run -o yaml > adapter-
 Add below to `adapter-pod.yml`
 
 ```yaml
-	args:
-	- /bin/sh
-	- -c
-	- >
-		i=0;
-		while true;
-		do
-			echo "$i: $(date)" >> /var/log/1.log;
-			echo "$(date) INFO $i" >> /var/log/2.log;
-			i=$((i+1));
-			sleep 1;
-		done
-	volumeMounts:
+spec:
+  containers:
+	- name: count
+	  image: busybox
+		args:
+		- /bin/sh
+		- -c
+		- >
+			i=0;
+			while true;
+			do
+				echo "$i: $(date)" >> /var/log/1.log;
+				echo "$(date) INFO $i" >> /var/log/2.log;
+				i=$((i+1));
+				sleep 1;
+			done
+		volumeMounts:
+		- name: varlog
+			mountPath: /var/log
+	- name: adapter
+		image: k8s.gcr.io/fluentd-gcp:1.30
+		env:
+		- name: FLUENTD_ARGS
+			value: -c /fluentd/etc/fluent.conf
+		volumeMounts:
+		- name: varlog
+			mountPath: /var/log
+		- name: config-volume
+			mountPath: /fluentd/etc
+		- name: logout
+			mountPath: /var/logout
+	volumes:
 	- name: varlog
-		mountPath: /var/log
-- name: adapter
-	image: k8s.gcr.io/fluentd-gcp:1.30
-	env:
-	- name: FLUENTD_ARGS
-		value: -c /fluentd/etc/fluent.conf
-	volumeMounts:
-	- name: varlog
-		mountPath: /var/log
+		emptyDir: {}
 	- name: config-volume
-		mountPath: /fluentd/etc
+		configMap:
+			name: fluentd-config
 	- name: logout
-		mountPath: /var/logout
-volumes:
-- name: varlog
-	emptyDir: {}
-- name: config-volume
-	configMap:
-		name: fluentd-config
-- name: logout
-	hostPath:
-		path: /usr/ckad/log_output
+		hostPath:
+			path: /usr/ckad/log_output
 ```
 
