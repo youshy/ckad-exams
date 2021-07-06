@@ -147,7 +147,7 @@ spec:
     emptyDir: {}
   - name: config-volume
     configMap:
-      name: fluentd-config
+      name: config
   - name: logout
     hostPath:
       path: /usr/ckad/log_output
