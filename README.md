@@ -153,3 +153,8 @@ spec:
       path: /usr/ckad/log_output
 ```
 
+Create pod
+
+```
+kubectl apply -f adapter-pod.yml
+```
